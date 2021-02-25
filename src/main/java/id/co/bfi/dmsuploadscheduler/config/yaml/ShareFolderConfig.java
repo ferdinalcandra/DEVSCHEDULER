@@ -6,7 +6,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @ConfigurationProperties(prefix = "share-folder")
-@PropertySource(value = "classpath:id/co/bfi/dmsuploadscheduler/conf/application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "file:conf/application.yml", factory = YamlPropertySourceFactory.class)
 public class ShareFolderConfig {
 	private String domain;
 	private String name;

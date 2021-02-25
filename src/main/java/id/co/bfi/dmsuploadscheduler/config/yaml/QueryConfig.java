@@ -6,7 +6,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @ConfigurationProperties(prefix = "query")
-@PropertySource(value = "classpath:id/co/bfi/dmsuploadscheduler/conf/query.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "file:conf/query.yml", factory = YamlPropertySourceFactory.class)
 public class QueryConfig {
 	private String docbaseParamDql;
 	private String folderIdDql;

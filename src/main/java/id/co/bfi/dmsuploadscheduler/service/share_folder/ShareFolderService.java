@@ -17,11 +17,12 @@ import jcifs.smb.SmbFileInputStream;
 public class ShareFolderService {
 	
 	@Autowired
-	ShareFolderConfig shareFolderConfig;
+	private ShareFolderConfig shareFolderConfig;
 	
 	@Autowired
-	JasyptConfig jasyptConfig;
+	private JasyptConfig jasyptConfig;
 	
+	// test
 	public ByteArrayOutputStream getFileOverSharedFolder(String filePath) throws IOException {
 		
 		final String userName = shareFolderConfig.getUser();

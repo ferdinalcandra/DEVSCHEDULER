@@ -6,7 +6,7 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @ConfigurationProperties(prefix = "dctm-rest")
-@PropertySource(value = "classpath:id/co/bfi/dmsuploadscheduler/conf/dctm-rest.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "file:conf/dctm-rest.yml", factory = YamlPropertySourceFactory.class)
 public class DctmRestConfig {
 	private String user;
 	private String pass;
@@ -20,8 +20,6 @@ public class DctmRestConfig {
 	private String contentType;
 	private String consumerDocCabinetName;
 	private String internalDocCabinetName;
-	private String dmsProcessNameConsumer;
-	private String dmsProcessNameInternal;
 	private String dmsActiveDocFolderName;
 	private String dmsInactiveDocFolderName;
 	public String getUser() {
@@ -95,18 +93,6 @@ public class DctmRestConfig {
 	}
 	public void setInternalDocCabinetName(String internalDocCabinetName) {
 		this.internalDocCabinetName = internalDocCabinetName;
-	}
-	public String getDmsProcessNameConsumer() {
-		return dmsProcessNameConsumer;
-	}
-	public void setDmsProcessNameConsumer(String dmsProcessNameConsumer) {
-		this.dmsProcessNameConsumer = dmsProcessNameConsumer;
-	}
-	public String getDmsProcessNameInternal() {
-		return dmsProcessNameInternal;
-	}
-	public void setDmsProcessNameInternal(String dmsProcessNameInternal) {
-		this.dmsProcessNameInternal = dmsProcessNameInternal;
 	}
 	public String getDmsActiveDocFolderName() {
 		return dmsActiveDocFolderName;

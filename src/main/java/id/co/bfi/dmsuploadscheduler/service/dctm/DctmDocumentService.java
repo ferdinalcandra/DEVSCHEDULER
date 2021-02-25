@@ -3,18 +3,19 @@ package id.co.bfi.dmsuploadscheduler.service.dctm;
 import java.io.UnsupportedEncodingException;
 import java.util.Base64;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import id.co.bfi.dmsuploadscheduler.config.yaml.DctmRestConfig;
 import id.co.bfi.dmsuploadscheduler.config.yaml.QueryConfig;
@@ -23,28 +24,27 @@ import id.co.bfi.dmsuploadscheduler.config.yaml.QueryConfig;
 public class DctmDocumentService {
 	
 	@Autowired
-	RestTemplate restTemplate;
+	private RestTemplate restTemplate;
 	
 	@Autowired
-	DctmRestConfig dctmRestConfig; 
+	private DctmRestConfig dctmRestConfig; 
 	
 	@Autowired
-	QueryConfig queryConfig;
+	private QueryConfig queryConfig;
 	
 	@Autowired
-	DctmRestService dctmRestService;
+	private DctmRestService dctmRestService;
 	
-	public JSONObject checkoutDocument(String url) throws JSONException {
-		return dctmRestService.makeRequest(url, HttpMethod.PUT);
-	}
+	@Autowired
+	private DctmRestClient dctmRestClient;
 	
-	public JSONObject cancelCheckoutDocument(String url) throws JSONException {
-		return dctmRestService.makeRequest(url, HttpMethod.DELETE);
-	}
+	@Autowired
+	private ObjectMapper objectMapper;
 	
-	public JSONObject uploadDocument(String properties, String documentByte, String mimeType, String folderId) throws JSONException {
+	// test
+	public JsonNode uploadDocument(String properties, String documentByte, String mimeType, String folderId) throws JsonMappingException, JsonProcessingException {
 		MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
-		parameters.add("metadata", new JSONObject().put("properties", new JSONObject(properties)).toString());
+		parameters.add("metadata", objectMapper.createObjectNode().set("properties", objectMapper.readTree(properties)).toString());
 		parameters.add("content", Base64.getDecoder().decode(documentByte.replaceAll(" ", "+")));
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -52,48 +52,45 @@ public class DctmDocumentService {
 		String result = restTemplate.postForObject(dctmRestConfig.getUrl()+"/repositories/"+dctmRestConfig.getRepositoryName()+
 				"/folders/"+folderId+"/documents?format="+contentType, 
 		    new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
-	    return new JSONObject(result);
+	    return objectMapper.readTree(result);
 	}
 	
-	public JSONObject uploadVersionDocument(String chronicleId, String properties, String documentByte, String mimeType) throws JSONException, UnsupportedEncodingException {
-		String isDocumentCheckoutDql = "select r_lock_owner from "+new JSONObject(properties).get("r_object_type").toString()+"(all) where r_object_id = '"+chronicleId+"'";
+	// test
+	public JsonNode uploadVersionDocument(String chronicleId, String properties, String documentByte, String mimeType) throws JsonMappingException, JsonProcessingException, UnsupportedEncodingException {
+		String isDocumentCheckoutDql = "select r_lock_owner from "+objectMapper.readTree(properties).get("r_object_type").asText()+"(all) where r_object_id = '"+chronicleId+"'";
 		if (!dctmRestService.getAttributeFromDql(isDocumentCheckoutDql).equals("")) {
-			cancelCheckoutDocument(dctmRestConfig.getUrl()+"/repositories/"+dctmRestConfig.getRepositoryName()+"/objects/"+chronicleId+"/lock");
+			dctmRestClient.cancelCheckoutDocument("/objects/"+chronicleId+"/lock");
 		}
-		checkoutDocument(dctmRestConfig.getUrl()+"/repositories/"+dctmRestConfig.getRepositoryName()+"/objects/"+chronicleId+"/lock");
+		dctmRestClient.checkoutDocument("/objects/"+chronicleId+"/lock");
 		MultiValueMap<String, Object> parameters = new LinkedMultiValueMap<String, Object>();
 		parameters.add("content", Base64.getDecoder().decode(documentByte.replaceAll(" ", "+")));
-		parameters.add("metadata", new JSONObject().put("properties", new JSONObject(properties)).toString());
+		parameters.add("metadata", objectMapper.createObjectNode().set("properties", objectMapper.readTree(properties)).toString());
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 		String contentType = dctmRestService.getAttributeFromDql(queryConfig.getContentTypeDql()+"'"+mimeType+"'");
 		String result = restTemplate.postForObject(dctmRestConfig.getUrl()+"/repositories/"+dctmRestConfig.getRepositoryName()+"/objects/"+chronicleId+
 				"/versions?object-id="+chronicleId+"&version-policy=next-major&format="+contentType, 
 		    new HttpEntity<MultiValueMap<String, Object>>(parameters, headers), String.class);
-		return new JSONObject(result);
+		return objectMapper.readTree(result);
 	}
 	
-	public String getFullFileSystemPath(String objectId) throws JSONException {
+	// test
+	public String getFullFileSystemPath(String objectId) throws JsonMappingException, JsonProcessingException {
 		String fullFileSystemPath = null;
 		String docbaseParamDql = queryConfig.getDocbaseParamDql();
-		JSONObject resultObject = dctmRestService.makeRequest(dctmRestConfig.getUrl()+"/repositories/"+ 
-	    		dctmRestConfig.getRepositoryName()+"?dql="+docbaseParamDql.replace("parentId", objectId), HttpMethod.GET);
-		JSONObject paramObject = null;
+		JsonNode resultObject = dctmRestService.makeRequest(docbaseParamDql.replace("parentId", objectId));
+		JsonNode paramObject = null;
 		if (resultObject != null) {
 	    	if (resultObject.has("entries")) {
-	    		JSONArray jsonArray = resultObject.getJSONArray("entries");
-		    	for (int j = 0; j < jsonArray.length(); j++) {
-		    		JSONObject jsonObject = (JSONObject)jsonArray.get(j);
-		    		for (int i = 0; i < jsonObject.length(); i++)
-		    			paramObject = jsonObject.getJSONObject("content").getJSONObject("properties"); 
-		    	} 
+	    		JsonNode jsonArray = objectMapper.readTree(resultObject.get("entries").toString());
+	    		paramObject = objectMapper.readTree(jsonArray.get(0).get("content").get("properties").toString());
 	    	}
 	    }
 		if (paramObject != null) {
-			int dataTicket = paramObject.getInt("data_ticket");
-			String dosExtension = paramObject.getString("dos_extension");
-			String fileSystemPath = paramObject.getString("file_system_path");
-			int docbaseId = paramObject.getInt("r_docbase_id");
+			int dataTicket = paramObject.get("data_ticket").asInt();
+			String dosExtension = paramObject.get("dos_extension").asText();
+			String fileSystemPath = paramObject.get("file_system_path").asText();
+			int docbaseId = paramObject.get("r_docbase_id").asInt();
 			String dbId = new String().valueOf(docbaseId);
 			while (dbId.length() < 8) {
 				dbId = "0"+dbId;

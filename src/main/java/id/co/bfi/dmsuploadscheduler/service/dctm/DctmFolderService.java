@@ -1,29 +1,26 @@
 package id.co.bfi.dmsuploadscheduler.service.dctm;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-
-import id.co.bfi.dmsuploadscheduler.config.yaml.DctmRestConfig;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Service
 public class DctmFolderService {
 	
 	@Autowired
-	DctmRestService dctmRestService;
+	private DctmRestClient dctmRestClient;
 	
 	@Autowired
-	RestTemplate restTemplate;
+	private DctmRestService dctmRestService;
 	
-	@Autowired
-	DctmRestConfig dctmRestConfig;
+	private ObjectMapper objectMapper = new ObjectMapper();
 	
-	public String createFolderByPath(String path) throws JSONException {
+	// test
+	public String createFolderByPath(String path) throws JsonMappingException, JsonProcessingException {
 		String folderId = null;
 		if (path.substring(0, 1).equals("/")) {
 			String[] folders = path.split("/");
@@ -31,49 +28,35 @@ public class DctmFolderService {
 			String cabinetId = null;
 			String dqlCabinetCheck = "select r_object_id from dm_cabinet where object_name = '"+folders[1]+"' and "
 					+ "any r_folder_path = '"+checkedPath+"'";
-			if (dctmRestService.getAttributeFromDql(dqlCabinetCheck) == null)
-				cabinetId = createCabinet(folders[1]);
+			String existingCabinetId = dctmRestService.getAttributeFromDql(dqlCabinetCheck);
+			if (existingCabinetId == null)
+				cabinetId = createObject(folders[1], "dm_cabinet" , "/cabinets");
+			else
+				cabinetId = existingCabinetId;
 			for (int i=2; i<folders.length; ++i) {
 				checkedPath = checkedPath + "/" + folders[i];
 				String dqlFolderCheck = "select r_object_id from dm_folder where object_name = '"+folders[i]+"' and "
 						+ "any r_folder_path = '"+checkedPath+"'";
-				if (dctmRestService.getAttributeFromDql(dqlFolderCheck) == null) {
-					folderId = createFolder(folders[i], cabinetId);
+				String existingFolderId = dctmRestService.getAttributeFromDql(dqlFolderCheck);
+				if (existingFolderId == null) {
+					folderId = createObject(folders[i], "dm_folder", "/folders/"+cabinetId+"/objects");
 					if (folderId != null)
 						cabinetId = folderId;
-				}
+				} else
+					folderId = existingFolderId;
 			}
 		}
 		return folderId;
 	}
 	
-	public String createCabinet(String cabinetName) throws JSONException {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.valueOf(dctmRestConfig.getContentType()));
-		HttpEntity<String> entity = new HttpEntity<String>(new JSONObject().put("properties", 
-				new JSONObject().put("object_name", cabinetName)).toString(), headers);
-		String result = restTemplate.postForObject(dctmRestConfig.getUrl()+"/repositories/"+dctmRestConfig.getRepositoryName()+
-				"/cabinets", entity, String.class);
-	    String objectId = null;
-		if (new JSONObject(result) != null) {
-	    	if (new JSONObject(result).has("properties")) 
-	    		objectId = new JSONObject(result).getJSONObject("properties").getString("r_object_id");
-	    }
-		return objectId;
-	}
-	
-	public String createFolder(String folderName, String folderParentId) throws JSONException {
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.valueOf(dctmRestConfig.getContentType()));
-		HttpEntity<String> entity = new HttpEntity<String>(new JSONObject().put("properties", 
-				new JSONObject().put("object_name", folderName).put("r_object_type", "dm_folder")).toString(), headers);
-		String result = restTemplate.postForObject(dctmRestConfig.getUrl()+"/repositories/"+dctmRestConfig.getRepositoryName()+
-				"/folders/"+folderParentId+"/objects", entity, String.class);
-	    String objectId = null;
-		if (new JSONObject(result) != null) {
-	    	if (new JSONObject(result).has("properties")) 
-	    		objectId = new JSONObject(result).getJSONObject("properties").getString("r_object_id");
-	    }
-		return objectId;
+	// test
+	public String createObject(String objectName, String objectType, String url) throws JsonMappingException, JsonProcessingException {
+		JsonNode propertiesValue = objectMapper.createObjectNode().put("object_name", objectName).put("r_object_type", objectType);
+		ObjectNode properties = objectMapper.createObjectNode().set("properties", propertiesValue);
+		JsonNode json = objectMapper.readTree(dctmRestClient.createObject(url, objectMapper.writeValueAsString(properties)).getBody().toString());
+		if (json.has("properties"))
+        	return json.get("properties").get("r_object_id").asText();
+        else
+        	return null;
 	}
 }

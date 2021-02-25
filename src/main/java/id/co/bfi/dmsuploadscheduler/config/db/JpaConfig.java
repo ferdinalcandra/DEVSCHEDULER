@@ -8,7 +8,7 @@ import id.co.bfi.dmsuploadscheduler.config.yaml.YamlPropertySourceFactory;
 
 @Configuration
 @ConfigurationProperties(prefix = "spring.jpa")
-@PropertySource(value = "classpath:id/co/bfi/dmsuploadscheduler/conf/application.yml", factory = YamlPropertySourceFactory.class)
+@PropertySource(value = "file:conf/application.yml", factory = YamlPropertySourceFactory.class)
 public class JpaConfig {
 	private String databasePlatform;
 	
