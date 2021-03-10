@@ -1,0 +1,72 @@
+documentum:
+  profiles.active: local
+jasypt:
+  profiles.active: local
+  
+---
+
+documentum:
+  profiles: development
+  datasource:
+    db:
+      url: jdbc:sqlserver://10.88.89.207/SQLK2;databaseName=K2DMS
+      username: sa
+      password: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:      
+    databasePlatform: org.hibernate.dialect.SQLServerDialect
+    database: SQL_SERVER
+    openInView: false
+    showSql: true
+    generateDdl: false
+    
+share-folder:
+  profiles: development
+  domain: 10.88.89.203
+  user: Administrator
+  pass: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF
+
+scheduler:
+  cronExpression: 1 * * * * *
+
+---
+
+documentum:
+  profiles: local
+  datasource:
+    db:
+      url: jdbc:sqlserver://10.88.88.141;databaseName=K2DMS
+      username: sa
+      password: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:      
+    databasePlatform: org.hibernate.dialect.SQLServerDialect
+    database: SQL_SERVER
+    openInView: false
+    showSql: true
+    generateDdl: false
+
+jasypt:
+  profiles: local
+  encryptor:
+    algorithm: PBEWithMD5AndDES
+    password: test
+    
+share-folder:
+  profiles: local
+  domain: 10.88.88.141
+  user: Administrator
+  pass: adnz3Ffhx5I9z3otbh+toDqHUM0E7/Ny
+  
+scheduler:
+  cronExpression: 1 * * * * *
+
+springdoc:
+  api-docs:
+    path: /api-docs
+
+resilience4j.retry:
+  instances:
+    dctmRestService:
+      maxRetryAttempts: 3
+      waitDuration: 10000
