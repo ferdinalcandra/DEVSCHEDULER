@@ -1,0 +1,15 @@
+springdoc:
+  api-docs:
+    path: /api-docs
+
+resilience4j.retry:
+  instances:
+    dctmRestService:
+      maxRetryAttempts: 3
+      waitDuration: 10000
+
+retry:
+  configs:
+    default:
+      max-retry-attempts: 3
+      wait-duration: 30s

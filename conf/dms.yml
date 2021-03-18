@@ -1,0 +1,36 @@
+dms:
+  profiles.active: local
+
+---
+
+dms:
+  profiles: development
+  datasource:
+    db:
+      url: jdbc:sqlserver://10.88.89.207/SQLK2;databaseName=K2DMS
+      username: sa
+      password: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:      
+    databasePlatform: org.hibernate.dialect.SQLServerDialect
+    database: SQL_SERVER
+    openInView: false
+    showSql: true
+    generateDdl: false
+
+---
+
+dms:
+  profiles: local
+  datasource:
+    db:
+      url: jdbc:sqlserver://10.88.88.141;databaseName=K2DMS
+      username: sa
+      password: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF
+      driverClassName: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:      
+    databasePlatform: org.hibernate.dialect.SQLServerDialect
+    database: SQL_SERVER
+    openInView: false
+    showSql: true
+    generateDdl: false
