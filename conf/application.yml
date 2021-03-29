@@ -1,0 +1,9 @@
+resilience4j.retry:
+  configs:
+    default:
+      maxRetryAttempts: 3
+      waitDuration: 30s
+  instances:
+    dctmRestService:
+      maxRetryAttempts: 3
+      waitDuration: 10000

@@ -1,0 +1,20 @@
+share-folder:
+  profiles.active: local
+
+---
+
+share-folder:
+  profiles: development
+  host: 10.88.89.203
+  domain: None
+  user: Administrator
+  pass: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF
+
+---
+
+share-folder:
+  profiles: local
+  host: 10.88.88.141
+  domain: ADDMS
+  user: Administrator
+  pass: 2qVUNy//PHDCmtSdZVq6TqOFgijXNMdF

@@ -1,0 +1,45 @@
+plugins {
+	id 'org.springframework.boot' version '2.4.4'
+	id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+	id 'java'
+	id 'java-library'
+	id 'eclipse'
+}
+
+group = 'id.co.bfi'
+version = '0.0.1'
+sourceCompatibility = '15'
+
+repositories {
+	mavenCentral()
+	jcenter()
+}
+
+ext {
+	set('springCloudVersion', "2020.0.1")
+}
+
+dependencies {
+	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+	implementation 'org.jasypt:jasypt:1.9.3'
+	implementation 'eu.agno3.jcifs:jcifs-ng:2.1.5'
+	implementation 'org.apache.tika:tika-core:1.25'
+	implementation 'io.github.resilience4j:resilience4j-spring-boot2'
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+	implementation 'org.springframework.cloud:spring-cloud-sleuth-zipkin'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-ui:1.5.2'
+	implementation 'de.codecentric:spring-boot-admin-starter-client:2.4.0'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+test {
+	useJUnitPlatform()
+}
